@@ -38,7 +38,7 @@ function mapRow(headings) {
 				.filter((cell) => !cell.classList.contains("hdr"))
 				.reduce(function (result, cell, i) {
 					const input = cell.querySelector("input,select");
-					var value;
+					let value;
 
 					if (input) {
 						value = input.type === "checkbox" ? input.checked : input.value;
@@ -60,7 +60,12 @@ function mapRow(headings) {
  * @param  {HTMLTableElement} table the table to convert
  * @return {Array<Object>}       array of objects representing each row in the table
  */
-function parseTable(table, program) {
+function parseTable(
+	table,
+	program,
+	minScore = 275,
+	condition = "на бюджетное место в пределах особой квоты"
+) {
 	const cells = [...table.tBodies[0].rows[0].cells];
 	const moreCells = [...table.tBodies[0].rows[1].cells];
 	const spanHeadingsIndexes = cells
@@ -73,7 +78,6 @@ function parseTable(table, program) {
 		});
 
 	let prevIndex;
-	console.log(spanHeadingsIndexes);
 	spanHeadingsIndexes.forEach((spindex) => {
 		cells.splice(
 			spindex.position,
@@ -89,27 +93,27 @@ function parseTable(table, program) {
 	);
 	let quotaIndex;
 	const quotaRow = tableRows.filter((cell, index) => {
-		if (
-			cell.firstChild.innerText.trim() ===
-			"на бюджетное место в пределах особой квоты"
-		) {
+		if (cell.firstChild.innerText.trim() === condition.name) {
 			quotaIndex = index;
 		}
-		return (
-			cell.firstChild.innerText.trim() ===
-			"на бюджетное место в пределах особой квоты"
-		);
+		return cell.firstChild.innerText.trim() === condition.name;
 	});
-	const quotaRows = tableRows.slice(
+	let quotaRange;
+	if (!quotaRow[0]) {
+		return [];
+	}
+	quotaRange = tableRows.slice(
 		quotaIndex,
 		quotaIndex + quotaRow[0].firstChild.rowSpan
 	);
-	quotaRows[0].cells[0].parentNode.removeChild(quotaRows[0].cells[0]);
+	quotaRange[0].cells[0].parentNode.removeChild(quotaRange[0].cells[0]);
 	headings.shift();
 
-	const mappedRows = quotaRows.map(mapRow(headings));
+	const mappedRows = quotaRange
+		.map(mapRow(headings))
+		.filter((row) => +row["ЕГЭ"] >= minScore);
 	for (let row of mappedRows) {
-		row.prgram = program;
+		row.program = program;
 	}
 	return mappedRows;
 }
