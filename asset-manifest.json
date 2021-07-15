@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/abit/static/css/main.9e768062.chunk.css",
+    "main.js": "/abit/static/js/main.a6877579.chunk.js",
+    "main.js.map": "/abit/static/js/main.a6877579.chunk.js.map",
+    "runtime-main.js": "/abit/static/js/runtime-main.54354b64.js",
+    "runtime-main.js.map": "/abit/static/js/runtime-main.54354b64.js.map",
+    "static/js/2.891b60f8.chunk.js": "/abit/static/js/2.891b60f8.chunk.js",
+    "static/js/2.891b60f8.chunk.js.map": "/abit/static/js/2.891b60f8.chunk.js.map",
+    "static/js/3.73f93990.chunk.js": "/abit/static/js/3.73f93990.chunk.js",
+    "static/js/3.73f93990.chunk.js.map": "/abit/static/js/3.73f93990.chunk.js.map",
+    "index.html": "/abit/index.html",
+    "static/css/main.9e768062.chunk.css.map": "/abit/static/css/main.9e768062.chunk.css.map",
+    "static/js/2.891b60f8.chunk.js.LICENSE.txt": "/abit/static/js/2.891b60f8.chunk.js.LICENSE.txt",
+    "static/media/lost.1d2c67aa.gif": "/abit/static/media/lost.1d2c67aa.gif"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.54354b64.js",
+    "static/js/2.891b60f8.chunk.js",
+    "static/css/main.9e768062.chunk.css",
+    "static/js/main.a6877579.chunk.js"
+  ]
+}
