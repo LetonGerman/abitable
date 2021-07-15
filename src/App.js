@@ -1,13 +1,17 @@
+/* eslint-disable react/display-name */
 import "./App.css";
-import { useState, useEffect, useMemo } from "react";
-import Table from "./Table";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { css } from "@emotion/react";
-import travolta from "./lost.gif";
-import parseTable from "./parseTable";
 import ky from "ky";
 import { DotLoader } from "react-spinners";
 import { Transition } from "@headlessui/react";
+import parseTable from "./parseTable";
+import travolta from "./lost.gif";
+import Table from "./Table";
+import MainFooter from "./MainFooter";
 import FilterSelect from "./FilterSelect";
+import SheetExportButton from "./SheetExportButton";
+import { splitOnce, groupBy } from "./helperFunctions";
 
 const override = css`
 	position: absolute;
@@ -45,64 +49,56 @@ const App = () => {
 			{
 				Header: "Приоритет 1",
 				accessor: "priority1",
-				Cell: (row) => {
-					return (
-						<span
-							className="text-sm text-gray-500"
-							data-tip={splitOnce(row.value)[1]}
-						>
-							{splitOnce(row.value)[0]}
-						</span>
-					);
-				},
+				Cell: ({ value }) => (
+					<span
+						className="text-sm text-gray-500"
+						data-tip={splitOnce(value)[1]}
+					>
+						{splitOnce(value)[0]}
+					</span>
+				),
 			},
 			{
 				Header: "Приоритет 2",
 				accessor: "priority2",
-				Cell: (row) => {
-					return (
-						<span
-							className="text-sm text-gray-500"
-							data-tip={splitOnce(row.value)[1]}
-						>
-							{splitOnce(row.value)[0]}
-						</span>
-					);
-				},
+				Cell: ({ value }) => (
+					<span
+						className="text-sm text-gray-500"
+						data-tip={splitOnce(value)[1]}
+					>
+						{splitOnce(value)[0]}
+					</span>
+				),
 			},
 			{
 				Header: "Приоритет 3",
 				accessor: "priority3",
-				Cell: (row) => {
-					return (
-						<span
-							className="text-sm text-gray-500"
-							data-tip={splitOnce(row.value)[1]}
-						>
-							{splitOnce(row.value)[0]}
-						</span>
-					);
-				},
+				Cell: ({ value }) => (
+					<span
+						className="text-sm text-gray-500"
+						data-tip={splitOnce(value)[1]}
+					>
+						{splitOnce(value)[0]}
+					</span>
+				),
 			},
 			{
 				Header: "Приоритет 4",
 				accessor: "priority4",
-				Cell: (row) => {
-					return (
-						<span
-							className="text-sm text-gray-500"
-							data-tip={splitOnce(row.value)[1]}
-						>
-							{splitOnce(row.value)[0]}
-						</span>
-					);
-				},
+				Cell: ({ value }) => (
+					<span
+						className="text-sm text-gray-500"
+						data-tip={splitOnce(value)[1]}
+					>
+						{splitOnce(value)[0]}
+					</span>
+				),
 			},
 		],
 		[]
 	);
-	const programs = useMemo(() => {
-		return {
+	const programs = useMemo(
+		() => ({
 			308: "01.03.02 «Прикладная математика и информатика»",
 			309: "09.03.01 «Информатика и вычислительная техника»",
 			310: "09.03.02 «Информационные системы и технологии»",
@@ -132,16 +128,73 @@ const App = () => {
 			334: "38.03.05 «Бизнес-информатика»",
 			335: "44.03.04 «Профессиональное обучение»",
 			336: "45.03.04 «Интеллектуальные системы в гуманитарной сфере»",
-		};
-	}, []);
+		}),
+		[]
+	);
 
-	async function fetchData() {
-		// You can await here
+	const requestTables = async () => {
+		const pagePromises = [];
+		// const textPromises = [];
+		const programOrder = [];
+		Object.keys(programs).forEach((n) => {
+			programOrder.push(n);
+			pagePromises.push(
+				ky(
+					`https://thingproxy.freeboard.io/fetch/https://abit.itmo.ru/bachelor/rating_rank/all/${n}/`
+				).text()
+			);
+		});
+		// await Promise.all(pagePromises);
+		// pagePromises.forEach((promise) => {
+		// 	textPromises.push(promise.text());
+		// });
+		return [programOrder, await Promise.all(pagePromises)];
+	};
+
+	const processTables = async () => {
+		const students = [];
+		const [programOrder, abitData] = await requestTables();
+		abitData.forEach((abit, index) => {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(abit, "text/html");
+			const table = doc.querySelector("table");
+			const parsedData = parseTable(
+				table,
+				programOrder[index],
+				minScore,
+				condition
+			);
+			students.push(parsedData);
+		});
+		// const tableData = await scraper.get("http://www.some-fake-url.com");
+
+		const groupedStudents = groupBy(students.flat(1), "ФИО");
+		const studentsTable = [];
+		Object.keys(groupedStudents).forEach((student) => {
+			console.log(groupedStudents[student]);
+			const newStudent = {
+				name: groupedStudents[student][0]["ФИО"],
+				eg: groupedStudents[student][0]["ЕГЭ"],
+				egid: groupedStudents[student][0]["ЕГЭ+ИД"],
+			};
+			groupedStudents[student].forEach((entry) => {
+				console.log(entry);
+				newStudent[`priority${entry["Номер заявления"]}`] =
+					programs[entry.program];
+				newStudent[`place${entry["Номер заявления"]}`] = entry["№ п/п"];
+			});
+			console.log(newStudent);
+			studentsTable.push(newStudent);
+		});
+		return studentsTable;
+	};
+
+	const fetchData = async () => {
 		setNoData(false);
 		setLoadingTable(true);
 		let newTables;
 		try {
-			newTables = await requestTables();
+			newTables = await processTables();
 		} catch (e) {
 			setLoadingTable(false);
 			setNoData(true);
@@ -149,11 +202,14 @@ const App = () => {
 		}
 		setTableData(newTables);
 		setLoadingTable(false);
-		if (tableData.length < 1) {
+		if (newTables.length < 1) {
 			setNoData(true);
 		}
-		// ...
-	}
+	};
+	const fetchMemoizedData = useCallback(async () => {
+		await fetchData();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const validateMinScore = (score) => {
 		if (score > 300) {
@@ -166,60 +222,23 @@ const App = () => {
 	};
 
 	useEffect(() => {
-		fetchData();
-	});
+		fetchMemoizedData();
+	}, []);
 
-	const groupBy = (xs, key) => {
-		return xs.reduce(function (rv, x) {
-			(rv[x[key]] = rv[x[key]] || []).push(x);
-			return rv;
-		}, {});
-	};
-
-	const splitOnce = (string, splitter = " ") => {
-		if (!string) return ["", ""];
-		const i = string.indexOf(splitter);
-		return [string.slice(0, i), string.slice(i + splitter.length)];
-	};
-
-	const requestTables = async () => {
-		const students = [];
-		for (let n in programs) {
-			const tableData = await ky(
-				`https://thingproxy.freeboard.io/fetch/https://abit.itmo.ru/bachelor/rating_rank/all/${n}/`
-			).text();
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(tableData, "text/html");
-			const table = doc.querySelector("table");
-			const parsedData = parseTable(table, n, minScore, condition);
-			students.push(parsedData);
-		}
-		//const tableData = await scraper.get("http://www.some-fake-url.com");
-
-		const groupedStudents = groupBy(students.flat(1), "ФИО");
-		const studentsTable = [];
-		for (let student in groupedStudents) {
-			const newStudent = {
-				name: groupedStudents[student][0]["ФИО"],
-				eg: groupedStudents[student][0]["ЕГЭ"],
-				egid: groupedStudents[student][0]["ЕГЭ+ИД"],
-			};
-			for (let entry of groupedStudents[student]) {
-				newStudent[`priority${entry["Номер заявления"]}`] =
-					programs[entry.program];
-			}
-			studentsTable.push(newStudent);
-		}
-		return studentsTable;
-	};
 	return (
-		<div className="min-h-screen bg-gray-100 text-gray-900 pt-2">
-			<main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-				<div className="flex flex-auto items-center justify-center">
-					<span className="mx-1">Абитуриенты с условием поступления</span>
-					<FilterSelect value={condition} onConditionChange={setCondition} />
-					<span className="mx-1">и баллом ЕГЭ не менее</span>
-					<div className="relative inline-block">
+		<div className="min-h-screen flex flex-col justify-between bg-gray-100 text-gray-900 pt-2">
+			<main className="max-w-8xl mb-auto px-4 sm:px-6 lg:px-8 pt-4">
+				<div className="flex flex-auto flex-wrap items-center justify-center">
+					<span className="mx-1 mt-1">
+						Абитуриенты ИТМО с условием поступления
+					</span>
+					<FilterSelect
+						className="mt-1"
+						value={condition}
+						onConditionChange={setCondition}
+					/>
+					<span className="mx-1  mt-1">и баллом ЕГЭ не менее</span>
+					<div className="relative inline-block mt-1">
 						<input
 							type="number"
 							value={minScore}
@@ -230,17 +249,21 @@ const App = () => {
 							id=""
 							min="0"
 							max="300"
-							className="py-2 pl-3 pr-2 mx-1 text-left bg-white rounded-lg shadow-sm cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-orange-300 focus-visible:ring-offset-2 focus-visible:border-indigo-500 sm:text-sm"
+							className="py-2 pl-3 pr-2 mx-1 mt-1 text-left bg-white rounded-lg shadow-sm cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-orange-300 focus-visible:ring-offset-2 focus-visible:border-indigo-500 sm:text-sm"
 						/>
 					</div>
 				</div>
 				<div className="flex justify-center">
 					<button
-						className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mt-3"
-						onClick={fetchData}
+						type="button"
+						className="mr-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mt-3"
+						onClick={() => {
+							fetchData();
+						}}
 					>
 						Обновить
 					</button>
+					<SheetExportButton tableData={tableData} />
 				</div>
 				<Transition
 					show={loadingTable}
@@ -285,6 +308,7 @@ const App = () => {
 					</Transition>
 				</div>
 			</main>
+			<MainFooter />
 		</div>
 	);
 };

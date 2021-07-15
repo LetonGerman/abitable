@@ -24,6 +24,14 @@
  * THE SOFTWARE.
  */
 
+const availableConditions = [
+	"без вступительных испытаний",
+	"на бюджетное место в пределах особой квоты",
+	"на бюджетное место в пределах целевой квоты",
+	"по общему конкурсу",
+	"на контрактной основе",
+];
+
 /**
  * generates factory functions to convert table rows to objects,
  * based on the titles in the table's <thead>
@@ -34,9 +42,9 @@ function mapRow(headings) {
 	return function mapRowToObject({ cells }) {
 		return (
 			[...cells]
-				//.slice(quotaIndex, quotaIndex + quotaCell.rowSpan)
+				// .slice(quotaIndex, quotaIndex + quotaCell.rowSpan)
 				.filter((cell) => !cell.classList.contains("hdr"))
-				.reduce(function (result, cell, i) {
+				.reduce((result, cell, i) => {
 					const input = cell.querySelector("input,select");
 					let value;
 
@@ -70,27 +78,60 @@ function parseTable(
 	const moreCells = [...table.tBodies[0].rows[1].cells];
 	const spanHeadingsIndexes = cells
 		.filter((heading) => heading.colSpan > 1)
-		.map((filteredHeading) => {
-			return {
-				position: filteredHeading.cellIndex,
-				span: filteredHeading.colSpan,
-			};
-		});
+		.map((filteredHeading) => ({
+			position: filteredHeading.cellIndex,
+			span: filteredHeading.colSpan,
+		}));
 
 	let prevIndex;
 	spanHeadingsIndexes.forEach((spindex) => {
 		cells.splice(
 			spindex.position,
 			1,
-			...moreCells.slice(prevIndex ? prevIndex : 0, spindex.span)
+			...moreCells.slice(prevIndex || 0, spindex.span)
 		);
 		prevIndex = spindex.position;
 	});
 	const headings = [...cells].map((heading) => heading.innerText.trim());
+	headings.shift();
 
 	const tableRows = [...table.tBodies[0].rows].filter(
 		(row) => !row.classList.contains("hdr")
 	);
+
+	if (condition.name === "любым") {
+		const quotaIndexes = [];
+		const quotaRanges = [];
+		const quotaRows = tableRows.filter((cell, index) => {
+			if (availableConditions.includes(cell.firstChild.innerText.trim())) {
+				quotaIndexes.push(index);
+			}
+			return availableConditions.includes(cell.firstChild.innerText.trim());
+		});
+		if (!quotaRows[0]) {
+			return [];
+		}
+		quotaIndexes.forEach((quotaIndex, i) => {
+			quotaRanges.push(
+				tableRows.slice(
+					quotaIndex,
+					quotaIndex + quotaRows[i].firstChild.rowSpan
+				)
+			);
+			quotaRanges[i][0].cells[0].parentNode.removeChild(
+				quotaRanges[i][0].cells[0]
+			);
+		});
+		const mappedRows = quotaRanges
+			.flat()
+			.map(mapRow(headings))
+			.filter((row) => +row["ЕГЭ"] >= minScore);
+		mappedRows.forEach((row) => {
+			row.program = program;
+		});
+		return mappedRows;
+	}
+
 	let quotaIndex;
 	const quotaRow = tableRows.filter((cell, index) => {
 		if (cell.firstChild.innerText.trim() === condition.name) {
@@ -98,23 +139,21 @@ function parseTable(
 		}
 		return cell.firstChild.innerText.trim() === condition.name;
 	});
-	let quotaRange;
 	if (!quotaRow[0]) {
 		return [];
 	}
-	quotaRange = tableRows.slice(
+	const quotaRange = tableRows.slice(
 		quotaIndex,
 		quotaIndex + quotaRow[0].firstChild.rowSpan
 	);
 	quotaRange[0].cells[0].parentNode.removeChild(quotaRange[0].cells[0]);
-	headings.shift();
 
 	const mappedRows = quotaRange
 		.map(mapRow(headings))
 		.filter((row) => +row["ЕГЭ"] >= minScore);
-	for (let row of mappedRows) {
+	mappedRows.forEach((row) => {
 		row.program = program;
-	}
+	});
 	return mappedRows;
 }
 
