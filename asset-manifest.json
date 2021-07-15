@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/abitable/static/css/main.9e768062.chunk.css",
-    "main.js": "/abitable/static/js/main.00cd8b2a.chunk.js",
-    "main.js.map": "/abitable/static/js/main.00cd8b2a.chunk.js.map",
+    "main.js": "/abitable/static/js/main.30878c63.chunk.js",
+    "main.js.map": "/abitable/static/js/main.30878c63.chunk.js.map",
     "runtime-main.js": "/abitable/static/js/runtime-main.2bd29876.js",
     "runtime-main.js.map": "/abitable/static/js/runtime-main.2bd29876.js.map",
     "static/js/2.891b60f8.chunk.js": "/abitable/static/js/2.891b60f8.chunk.js",
@@ -18,6 +18,6 @@
     "static/js/runtime-main.2bd29876.js",
     "static/js/2.891b60f8.chunk.js",
     "static/css/main.9e768062.chunk.css",
-    "static/js/main.00cd8b2a.chunk.js"
+    "static/js/main.30878c63.chunk.js"
   ]
 }
