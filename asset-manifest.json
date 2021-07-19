@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/abitable/static/css/main.f8e4ee58.chunk.css",
-    "main.js": "/abitable/static/js/main.4c6ea0ba.chunk.js",
-    "main.js.map": "/abitable/static/js/main.4c6ea0ba.chunk.js.map",
+    "main.css": "/abitable/static/css/main.8994e233.chunk.css",
+    "main.js": "/abitable/static/js/main.b03b1258.chunk.js",
+    "main.js.map": "/abitable/static/js/main.b03b1258.chunk.js.map",
     "runtime-main.js": "/abitable/static/js/runtime-main.2bd29876.js",
     "runtime-main.js.map": "/abitable/static/js/runtime-main.2bd29876.js.map",
     "static/js/2.e6d7f639.chunk.js": "/abitable/static/js/2.e6d7f639.chunk.js",
@@ -10,14 +10,14 @@
     "static/js/3.73f93990.chunk.js": "/abitable/static/js/3.73f93990.chunk.js",
     "static/js/3.73f93990.chunk.js.map": "/abitable/static/js/3.73f93990.chunk.js.map",
     "index.html": "/abitable/index.html",
-    "static/css/main.f8e4ee58.chunk.css.map": "/abitable/static/css/main.f8e4ee58.chunk.css.map",
+    "static/css/main.8994e233.chunk.css.map": "/abitable/static/css/main.8994e233.chunk.css.map",
     "static/js/2.e6d7f639.chunk.js.LICENSE.txt": "/abitable/static/js/2.e6d7f639.chunk.js.LICENSE.txt",
     "static/media/lost.1d2c67aa.gif": "/abitable/static/media/lost.1d2c67aa.gif"
   },
   "entrypoints": [
     "static/js/runtime-main.2bd29876.js",
     "static/js/2.e6d7f639.chunk.js",
-    "static/css/main.f8e4ee58.chunk.css",
-    "static/js/main.4c6ea0ba.chunk.js"
+    "static/css/main.8994e233.chunk.css",
+    "static/js/main.b03b1258.chunk.js"
   ]
 }
